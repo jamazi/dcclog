@@ -7,7 +7,7 @@ from dcclog import DEBUG, ConsoleHandler, Formatter, getLogger, log
 
 handler = ConsoleHandler(formatter=Formatter("%(message)s"))
 logger = getLogger("test", level=DEBUG, handlers=handler)
-
+logger.propagate = True
 latency_ms = randint(50, 150)
 
 
