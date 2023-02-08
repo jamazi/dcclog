@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dcclog"
+version = "0.7.1"
+authors = [{ name = "jamazi", email = "jamazi@tutanota.com" }]
+description = "Logging package with color and encryption support"
+readme = "README.rst"
+requires-python = ">=3.9"
+keywords = ["log"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.urls]
+"Homepage" = "https://github.com/jamazi/dcclog"
+"Bug Tracker" = "https://github.com/jamazi/dcclog/issues"
+
+[project.optional-dependencies]
+cipher = ["pycryptodome>=3.15.0"]
+dev = ["black", "isort", "mypy", "pylint", "pytest"]
+all = ["dcclog[dev]", "dcclog[cipher]"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_unreachable = true
+warn_unused_ignores = true
+strict = true
+
+[tool.pylint]
+max-line-length = 79
+disable = [
+  "missing-function-docstring",
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "import-outside-toplevel",
+  "invalid-name",
+]
+
+[tool.black]
+line-length = 79
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib", "--verbose"]

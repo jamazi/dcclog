@@ -1,0 +1,12 @@
+__pycache__/
+build/
+dist/
+*.egg-info/
+.vscode/
+.mypy_cache/
+.venv/
+.logs/
+*.json
+*.pem
+*.pub
+*.txt
