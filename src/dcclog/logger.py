@@ -1,4 +1,5 @@
 import logging
+from logging.handlers import TimedRotatingFileHandler
 from typing import Iterable, Optional, Union
 
 from dcclog.cipher import Cipher
@@ -30,7 +31,7 @@ def getLogger(
 def default_config(
     level: int = logging.NOTSET,
     color: bool = True,
-    filename: Optional[str] = None,
+    filename: Optional[Union[str, logging.Handler]] = None,
     file_level: int = logging.NOTSET,
     cipher: Optional[Cipher] = None,
 ) -> None:
@@ -40,7 +41,15 @@ def default_config(
         console_hdlr.setFormatter(Formatter(color=color))
         _default_handlers.append(console_hdlr)
         if filename:
-            file_hdlr = logging.FileHandler(filename)
+            if isinstance(filename, logging.Handler):
+                file_hdlr = filename
+            else:
+                file_hdlr = TimedRotatingFileHandler(
+                    filename,
+                    when="midnight",
+                    backupCount=7,
+                    encoding="utf8",
+                )
             file_hdlr.setLevel(file_level)
             file_hdlr.setFormatter(Formatter(cipher=cipher))
             _default_handlers.append(file_hdlr)
