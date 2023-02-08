@@ -1,6 +1,6 @@
 import inspect
 import logging
-from functools import partial, wraps
+from functools import wraps
 from time import perf_counter_ns
 from typing import Any, Callable, Optional, TypeVar, Union, overload
 
@@ -23,6 +23,7 @@ def log(
     stacklevel: int = 2,
     nested: bool = False,
     minimal_latency_ms: int = 100,
+    skip_args: int = 0,
 ) -> Callable[[F], F]:
     ...
 
@@ -35,6 +36,7 @@ def log(
     stacklevel: int = 2,
     nested: bool = False,
     minimal_latency_ms: int = 100,
+    skip_args: int = 0,
 ) -> Union[Callable[[Callable[..., R]], Callable[..., R]], Callable[..., R]]:
     def get_caller_info(func: Callable[..., R]) -> dict[str, Any]:
         try:
@@ -57,39 +59,42 @@ def log(
             return f" Execution time: {round(t / 1e6, 3)}ms"
         return ""
 
-    def wrapper(func: Callable[..., R], *args: Any, **kwargs: Any) -> R:
-        nonlocal logger
+    def decorator(func: Callable[..., R]) -> Callable[..., R]:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> R:
+            nonlocal logger
 
-        logger = logger or getLogger(func.__module__)
+            logger = logger or getLogger(func.__module__)
 
-        args_repr = list(map(repr, args))
-        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
-        signature = ", ".join(args_repr + kwargs_repr)
+            args_repr = list(map(repr, args[skip_args:]))
+            kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+            signature = ", ".join(args_repr + kwargs_repr)
 
-        caller_info = {"caller_info": get_caller_info(func)} if nested else {}
-
-        try:
-            timer = perf_counter_ns()
-            result = func(*args, **kwargs)
-            timer = perf_counter_ns() - timer
-        except Exception as exp:
-            timer = perf_counter_ns() - timer
-            logger.log(
-                level,
-                "Function %s called with args: (%s), raised exception.%s",
-                func.__name__,
-                signature,
-                format_latency(timer),
-                exc_info=exp,
-                stacklevel=stacklevel,
-                extra=caller_info,
+            caller_info = (
+                {"caller_info": get_caller_info(func)} if nested else {}
             )
-            raise exp
-        else:
+
+            try:
+                timer = perf_counter_ns()
+                result = func(*args, **kwargs)
+                timer = perf_counter_ns() - timer
+            except Exception as exp:
+                timer = perf_counter_ns() - timer
+                logger.log(
+                    level,
+                    "Function %s called with args: (%s), raised exception.%s",
+                    func.__qualname__,
+                    signature,
+                    format_latency(timer),
+                    exc_info=exp,
+                    stacklevel=stacklevel,
+                    extra=caller_info,
+                )
+                raise exp
             logger.log(
                 level,
                 "Function %s called with args: (%s), returned: %r.%s",
-                func.__name__,
+                func.__qualname__,
                 signature,
                 result,
                 format_latency(timer),
@@ -98,12 +103,11 @@ def log(
             )
             return result
 
+        return wrapper
+
     if func is not None:
         if callable(func):
-            return wraps(func)(partial(wrapper, func))
+            return decorator(func)
         raise TypeError(f"{func!r} is not a callable.")
-
-    def decorator(func: Callable[..., R]) -> Callable[..., R]:
-        return wraps(func)(partial(wrapper, func))
 
     return decorator
