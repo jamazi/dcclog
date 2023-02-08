@@ -51,5 +51,7 @@ def default_config(
                     encoding="utf8",
                 )
             file_hdlr.setLevel(file_level)
-            file_hdlr.setFormatter(Formatter(cipher=cipher))
+            file_hdlr.setFormatter(
+                Formatter(cipher=cipher, escape_newline="\\n\t")
+            )
             _default_handlers.append(file_hdlr)

@@ -21,11 +21,13 @@ class Formatter(logging.Formatter):
         *,
         color: Union[Literal[False, True], Callable[[int], str]] = False,
         cipher: Optional[Cipher] = None,
+        escape_newline: Optional[str] = None,
         **kwargs: Any,
     ):
         super().__init__(fmt, **kwargs)
         self.set_color(color)
         self.set_cipher(cipher)
+        self._escape_newline = escape_newline
 
     def set_cipher(self, cipher: Optional[Cipher] = None) -> Formatter:
         self._cipher = cipher
@@ -52,6 +54,8 @@ class Formatter(logging.Formatter):
                 setattr(record, "lineno", caller_info["lineno"])
 
         message = super().format(record)
+        if self._escape_newline is not None:
+            message = self._escape_newline.join(message.splitlines())
 
         if callable(self._color_fn):
             level_color = self._color_fn(record.levelno)
