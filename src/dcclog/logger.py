@@ -52,3 +52,6 @@ def default_config(
             )
             _default_handlers.append(file_hdlr)
     logging.basicConfig(handlers=_default_handlers, force=True)
+
+
+basicConfig = default_config
