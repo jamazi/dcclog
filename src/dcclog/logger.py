@@ -15,16 +15,12 @@ def getLogger(
     handlers: Union[Iterable[logging.Handler], logging.Handler, None] = None,
 ) -> logging.Logger:
     logger = logging.getLogger(name)
-    logger.propagate = False
     logger.setLevel(level)
     if isinstance(handlers, logging.Handler):
         logger.addHandler(handlers)
     elif isinstance(handlers, Iterable):
         for hdlr in handlers:
             logger.addHandler(hdlr)
-    if not logger.hasHandlers():
-        for h in _default_handlers:
-            logger.addHandler(h)
     return logger
 
 
@@ -55,3 +51,4 @@ def default_config(
                 Formatter(cipher=cipher, escape_newline="\\n\t")
             )
             _default_handlers.append(file_hdlr)
+    logging.basicConfig(handlers=_default_handlers, force=True)
