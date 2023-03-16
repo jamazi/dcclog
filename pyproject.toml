@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dcclog"
-version = "0.9.3"
+version = "0.9.4"
 authors = [{ name = "jamazi", email = "jamazi@tutanota.com" }]
 description = "Logging package with color and encryption support"
 readme = "README.rst"
@@ -15,6 +15,9 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
+
+[project.scripts]
+read_encrypted_logs = "dcclog.reader:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
