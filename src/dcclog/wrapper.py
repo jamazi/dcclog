@@ -24,6 +24,7 @@ def log(
     nested: bool = False,
     minimal_latency_ms: int = 100,
     skip_args: int = 0,
+    max_repr_size: int = 0,
 ) -> Callable[[F], F]:
     ...
 
@@ -37,6 +38,7 @@ def log(
     nested: bool = False,
     minimal_latency_ms: int = 100,
     skip_args: int = 0,
+    max_repr_size: int = 0,
 ) -> Union[Callable[[Callable[..., R]], Callable[..., R]], Callable[..., R]]:
     def get_caller_info(func: Callable[..., R]) -> dict[str, Any]:
         try:
@@ -55,9 +57,15 @@ def log(
     def format_latency(t: int) -> str:
         if t >= minimal_latency_ms * 1e6:
             if t >= 1e9:
-                return f" Execution time: {round(t / 1e9, 3)}s"
-            return f" Execution time: {round(t / 1e6, 3)}ms"
+                return f". Execution time: {round(t / 1e9, 3)}s"
+            return f". Execution time: {round(t / 1e6, 3)}ms"
         return ""
+
+    def truncate_text(text: Any) -> str:
+        r = text if isinstance(text, str) else repr(text)
+        if max_repr_size > 0:
+            return r[:max_repr_size] + (r[max_repr_size:] and "..")
+        return r
 
     def decorator(func: Callable[..., R]) -> Callable[..., R]:
         @wraps(func)
@@ -66,16 +74,18 @@ def log(
 
             logger = logger or getLogger(func.__module__)
 
-            args_repr = list(map(repr, args[skip_args:]))
-            kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]
+            args_repr = list(map(truncate_text, args[skip_args:]))
+            kwargs_repr = [
+                f"{k}=`{truncate_text(v)}`" for k, v in kwargs.items()
+            ]
             signature = ", ".join(args_repr + kwargs_repr)
 
             caller_info = (
                 {"caller_info": get_caller_info(func)} if nested else {}
             )
 
+            timer = perf_counter_ns()
             try:
-                timer = perf_counter_ns()
                 result = func(*args, **kwargs)
                 timer = perf_counter_ns() - timer
             except Exception as exp:
@@ -93,10 +103,10 @@ def log(
                 raise exp
             logger.log(
                 level,
-                "Function %s called with args: (%s), returned: %r.%s",
+                "Function %s called with args: (%s), returned: `%s`%s",
                 func.__qualname__,
                 signature,
-                result,
+                truncate_text(result),
                 format_latency(timer),
                 stacklevel=stacklevel,
                 extra=caller_info,

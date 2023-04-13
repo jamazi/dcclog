@@ -28,7 +28,7 @@ def test_log(caplog: pytest.LogCaptureFixture) -> None:
     r = divide(a, b)
 
     assert r == int(a / b)
-    assert f"called with args: ({a}, {b}), returned: {r}." in caplog.text
+    assert f"called with args: ({a}, {b}), returned: `{r}`" in caplog.text
 
 
 def test_log_exception(caplog: pytest.LogCaptureFixture) -> None:

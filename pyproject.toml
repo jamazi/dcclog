@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dcclog"
-version = "0.9.4"
+version = "0.10.0"
 authors = [{ name = "jamazi", email = "jamazi@tutanota.com" }]
 description = "Logging package with color and encryption support"
 readme = "README.rst"
